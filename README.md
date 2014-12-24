@@ -14,11 +14,11 @@ pod 'Amr2Wav', :git => 'https://github.com/summerblue/Amr2Wav.git'
 ### Calling
 
 ```obj-c
-    NSString *mediaPath = @"http://oralmaster-ugc.qiniudn.com/user_1_2014-12-23_10:13:39-SmKxmA.amr";
-    
-    NSURL *url = [[NSURL alloc] initWithString:mediaPath];
-    NSData * audioData = [NSData dataWithContentsOfURL:url];
-    
-    // Conversion
-    NSData *data = DecodeAMRToWAVE(audioData);
+NSString *mediaPath = @"http://oralmaster-ugc.qiniudn.com/user_1_2014-12-23_10:13:39-SmKxmA.amr";
+
+NSURL *url = [[NSURL alloc] initWithString:mediaPath];
+NSData * audioData = [NSData dataWithContentsOfURL:url];
+
+// Conversion
+NSData *data = DecodeAMRToWAVE(audioData);
 ```
