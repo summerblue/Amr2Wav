@@ -9,7 +9,7 @@
 Pod::Spec.new do |s|
   
   s.name             = "Amr2Wav"
-  s.version          = "0.0.2"
+  s.version          = "0.0.3"
   s.summary          = "A library that convert audio file format from amr to wav ."
   s.homepage         = "https://github.com/summerblue/Amr2Wav"
   
@@ -21,5 +21,5 @@ Pod::Spec.new do |s|
   s.source           = { :git => "https://github.com/summerblue/Amr2Wav.git", :tag => s.version }
   
   s.requires_arc     = true
-  s.source_files     = 'amr2wav/**/*.{h,m}'
+  s.source_files     = 'amr2wav/*'
 end
