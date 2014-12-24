@@ -8,18 +8,20 @@
 
 Pod::Spec.new do |s|
   
-  s.name             = "Amr2Wav"
-  s.version          = "0.0.4"
-  s.summary          = "A library that convert audio file format from amr to wav ."
-  s.homepage         = "https://github.com/summerblue/Amr2Wav"
+  s.name               = "Amr2Wav"
+  s.version            = "0.0.5"
+  s.summary            = "A library that convert audio file format from amr to wav ."
+  s.homepage           = "https://github.com/summerblue/Amr2Wav"
   
-  s.license          = "MIT"
-  s.author           = { "Charlie Jade" => "summer.alex07@gmail.com" }
-  s.social_media_url = "http://summerblue.me"
-  s.platform         = :ios, "7.0"
+  s.license            = "MIT"
+  s.author             = { "Charlie Jade" => "summer.alex07@gmail.com" }
+  s.social_media_url   = "http://summerblue.me"
+  s.platform           = :ios, "7.0"
   
-  s.source           = { :git => "https://github.com/summerblue/Amr2Wav.git", :tag => s.version }
+  s.source             = { :git => "https://github.com/summerblue/Amr2Wav.git", :tag => s.version }
   
-  s.requires_arc     = true
-  s.source_files     = 'amr2wav/**/*.{h,m,a}'
+  s.requires_arc       = true
+  s.source_files       = 'amr2wav/**/*.{h,m}'
+  s.vendored_libraries = 'amr2wav/lib/libopencore-amrnb.a'
+
 end
