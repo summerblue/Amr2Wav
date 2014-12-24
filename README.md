@@ -5,27 +5,20 @@ A library that convert audio file format from amr to wav .
 
 ## Useage
 
+### Install
+
+```
+pod 'Amr2Wav', :git => 'https://github.com/summerblue/Amr2Wav.git'
+```
+
+### Calling
+
 ```obj-c
-    NSString *mediaPath = [NSString stringWithFormat:@"%@%@",HOST_VOICE,order.sound];
+    NSString *mediaPath = @"http://oralmaster-ugc.qiniudn.com/user_1_2014-12-23_10:13:39-SmKxmA.amr";
     
-    NSURL *url = [[NSURL alloc]initWithString:mediaPath];
+    NSURL *url = [[NSURL alloc] initWithString:mediaPath];
     NSData * audioData = [NSData dataWithContentsOfURL:url];
     
-    //将数据保存到本地指定位置
-    NSString *docDirPath = [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0];
-    NSString *filePath = [NSString stringWithFormat:@"%@/%@.amr", docDirPath , @"temp"];
-    [audioData writeToFile:filePath atomically:YES];
-    
-    //播放本地音乐
-    NSURL *fileURL = [NSURL fileURLWithPath:filePath];
-    //amr 转 wav
-    [Tool initPlayer];
-    NSData *data = [NSData dataWithContentsOfURL:fileURL];
-    
-    NSError *error;
-    player = [[AVAudioPlayer alloc]initWithData:DecodeAMRToWAVE(data) error:&error];
-    NSLog(@"error:%@",error);
-    
-    [player play];
-
+    // Conversion
+    NSData *data = DecodeAMRToWAVE(audioData);
 ```
