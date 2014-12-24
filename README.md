@@ -1,7 +1,7 @@
 Amr2Wav
 ==========
 
-A library that can convert amr to wav 
+A library that convert audio file format from amr to wav .
 
 ## Useage
 
