@@ -9,7 +9,7 @@
 Pod::Spec.new do |s|
   
   s.name             = "Amr2Wav"
-  s.version          = "0.0.1"
+  s.version          = "0.0.2"
   s.summary          = "A library that convert audio file format from amr to wav ."
   s.homepage         = "https://github.com/summerblue/Amr2Wav"
   
