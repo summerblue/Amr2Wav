@@ -15,14 +15,14 @@ typedef unsigned short u16;
 typedef unsigned char u8;
 int amrEncodeMode[] = {4750, 5150, 5900, 6700, 7400, 7950, 10200, 12200}; // amr 编码方式
 
-u16 readUInt16(char* bis) {
+static u16 readUInt16(char* bis) {
     u16 result = 0;
     result += ((u16)(bis[0])) << 8;
     result += (u8)(bis[1]);
     return result;
 }
 
-u32 readUint32(char* bis) {
+static u32 readUint32(char* bis) {
     u32 result = 0;
     result += ((u32) readUInt16(bis)) << 16;
     bis+=2;
@@ -30,25 +30,14 @@ u32 readUint32(char* bis) {
     return result;
 }
 
-s64 readSint64(char* bis) {
-    s64 result = 0;
-    result += ((u64) readUint32(bis)) << 32;
-    bis+=4;
-    result += readUint32(bis);
-    return result;
-}
-
-NSData * fuckAndroid3GP(NSData *data) {
+static NSData * fuckAndroid3GP(NSData *data) {
     //http://android.amberfog.com/?p=181
     u32 size = 0; 
     u32 type =0;
     u32 boxSize =0;
-    //char HEADER_TYPE[] = {'f', 't', 'y', 'p'};
     
     char AMR_MAGIC_HEADER[6] = {0x23, 0x21, 0x41, 0x4d, 0x52, 0x0a};
-    
-    u32 brand =0;
-    u32 minorVersion=0;
+
     //u32 *compatibleBrands;
     
     if (data.length<50) {
@@ -68,10 +57,8 @@ NSData * fuckAndroid3GP(NSData *data) {
         return data;
     }
     
-    brand = readUint32(bis);
     boxSize += 4;
     bis+=4;
-    minorVersion = readUint32(bis);
     boxSize += 4;
     bis+=4;
     int remainSize = (int)(size - boxSize);
@@ -88,14 +75,13 @@ NSData * fuckAndroid3GP(NSData *data) {
     size = readUint32(bis);
     boxSize += 4;
     bis+=4;
-    type = readUint32(bis);
     boxSize += 4;
     bis+=4;
     
     int rawAmrDataLength=(size - boxSize);
     int fullAmrDataLength = 6 + rawAmrDataLength;
     //char* amrData = new char[fullAmrDataLength];
-    NSMutableData *amrData = [[[NSMutableData alloc]initWithCapacity:fullAmrDataLength]autorelease];
+    NSMutableData *amrData = [[NSMutableData alloc]initWithCapacity:fullAmrDataLength];
     //memcpy(amrData,AMR_MAGIC_HEADER,6);
     //memcpy(amrData+6,bis,rawAmrDataLength);
     [amrData appendBytes:AMR_MAGIC_HEADER length:6];
@@ -108,13 +94,13 @@ NSData * fuckAndroid3GP(NSData *data) {
 #pragma mark - Decode
 //decode
 
-const int myround(const double x)
+static const int myround(const double x)
 {
 	return((int)(x+0.5));
 } 
 
 // 根据帧头计算当前帧大小
-int caclAMRFrameSize(unsigned char frameHeader)
+static int caclAMRFrameSize(unsigned char frameHeader)
 {
 	int mode;
 	int temp1 = 0;
@@ -139,7 +125,7 @@ int caclAMRFrameSize(unsigned char frameHeader)
 
 // 读第一个帧 - (参考帧)
 // 返回值: 0-出错; 1-正确
-int ReadAMRFrameFirstData(char* fpamr,int pos,int maxLen, unsigned char frameBuffer[], int* stdFrameSize, unsigned char* stdFrameHeader)
+static int ReadAMRFrameFirstData(char* fpamr,int pos,int maxLen, unsigned char frameBuffer[], int* stdFrameSize, unsigned char* stdFrameHeader)
 {
     int nPos = 0;
 	memset(frameBuffer, 0, sizeof(frameBuffer));
@@ -173,9 +159,8 @@ int ReadAMRFrameFirstData(char* fpamr,int pos,int maxLen, unsigned char frameBuf
 }
 
 // 返回值: 0-出错; 1-正确
-int ReadAMRFrameData(char* fpamr,int pos,int maxLen, unsigned char frameBuffer[], int stdFrameSize, unsigned char stdFrameHeader)
+static int ReadAMRFrameData(char* fpamr,int pos,int maxLen, unsigned char frameBuffer[], int stdFrameSize, unsigned char stdFrameHeader)
 {
-	int bytes = 0;
     int nPos = 0;
 	unsigned char frameHeader; // 帧头
 	
@@ -210,7 +195,7 @@ int ReadAMRFrameData(char* fpamr,int pos,int maxLen, unsigned char frameBuffer[]
 	return nPos;
 }
 
-void WriteWAVEHeader(NSMutableData* fpwave, int nFrame)
+static void WriteWAVEHeader(NSMutableData* fpwave, int nFrame)
 {
 	char tag[10] = "";
 	
@@ -261,7 +246,6 @@ NSData* DecodeAMRToWAVE(NSData* data) {
 	int nFrameCount = 0;
 	int stdFrameSize;
     int nTemp;
-    char bErr = 0;
 	unsigned char stdFrameHeader;
 	
 	unsigned char amrFrame[MAX_AMR_FRAME_SIZE];
@@ -323,7 +307,9 @@ NSData* DecodeAMRToWAVE(NSData* data) {
 		memset(pcmFrame, 0, sizeof(pcmFrame));
 		//if (!ReadAMRFrame(fpamr, amrFrame, stdFrameSize, stdFrameHeader)) break;
         nTemp = ReadAMRFrameData(rfile,pos,maxLen, amrFrame, stdFrameSize, stdFrameHeader);
-        if (!nTemp) {bErr = 1;break;}
+        if (!nTemp) {
+            break;
+        }
         pos += nTemp;
 		
 		// 解码一个AMR音频帧成PCM数据 (8k-16b-单声道)
@@ -341,240 +327,14 @@ NSData* DecodeAMRToWAVE(NSData* data) {
 	//fpwave = fopen([docFilePath cStringUsingEncoding:NSASCIIStringEncoding], "r+");
     //if (!bErr) {
         
-    NSMutableData *out = [[[NSMutableData alloc]init] autorelease];
+    NSMutableData *out = [[NSMutableData alloc]init];
 	WriteWAVEHeader(out, nFrameCount);
     [out appendData:fpwave];
 	//fclose(fpwave);
-    [fpwave release];
 	
 	return out;
     //}
     
     // return data;
-}
-
-
-#pragma mark Encode
-// 从WAVE文件读一个完整的PCM音频帧
-// 返回值: 0-错误 >0: 完整帧大小
-int ReadPCMFrameData(short speech[], char* fpwave, int nChannels, int nBitsPerSample)
-{
-	int nRead = 0;
-	int x = 0, y=0;
-	unsigned short ush1=0, ush2=0, ush=0;
-	
-	// 原始PCM音频帧数据
-	unsigned char  pcmFrame_8b1[PCM_FRAME_SIZE];
-	unsigned char  pcmFrame_8b2[PCM_FRAME_SIZE<<1];
-	unsigned short pcmFrame_16b1[PCM_FRAME_SIZE];
-	unsigned short pcmFrame_16b2[PCM_FRAME_SIZE<<1];
-	
-    nRead = (nBitsPerSample/8) * PCM_FRAME_SIZE*nChannels;
-	if (nBitsPerSample==8 && nChannels==1)
-        {
-		//nRead = fread(pcmFrame_8b1, (nBitsPerSample/8), PCM_FRAME_SIZE*nChannels, fpwave);
-        memcpy(pcmFrame_8b1,fpwave,nRead);
-		for(x=0; x<PCM_FRAME_SIZE; x++)
-            {
-			speech[x] =(short)((short)pcmFrame_8b1[x] << 7);
-            }
-        }
-	else
-		if (nBitsPerSample==8 && nChannels==2)
-            {
-			//nRead = fread(pcmFrame_8b2, (nBitsPerSample/8), PCM_FRAME_SIZE*nChannels, fpwave);
-            memcpy(pcmFrame_8b2,fpwave,nRead);
-            
-			for( x=0, y=0; y<PCM_FRAME_SIZE; y++,x+=2 )
-                {
-				// 1 - 取两个声道之左声道
-				speech[y] =(short)((short)pcmFrame_8b2[x+0] << 7);
-				// 2 - 取两个声道之右声道
-				//speech[y] =(short)((short)pcmFrame_8b2[x+1] << 7);
-				// 3 - 取两个声道的平均值
-				//ush1 = (short)pcmFrame_8b2[x+0];
-				//ush2 = (short)pcmFrame_8b2[x+1];
-				//ush = (ush1 + ush2) >> 1;
-				//speech[y] = (short)((short)ush << 7);
-                }
-            }
-		else
-			if (nBitsPerSample==16 && nChannels==1)
-                {
-				//nRead = fread(pcmFrame_16b1, (nBitsPerSample/8), PCM_FRAME_SIZE*nChannels, fpwave);
-                memcpy(pcmFrame_16b1,fpwave,nRead);
-                
-				for(x=0; x<PCM_FRAME_SIZE; x++)
-                    {
-					speech[x] = (short)pcmFrame_16b1[x+0];
-                    }
-                }
-			else
-				if (nBitsPerSample==16 && nChannels==2)
-                    {
-					//nRead = fread(pcmFrame_16b2, (nBitsPerSample/8), PCM_FRAME_SIZE*nChannels, fpwave);
-                    memcpy(pcmFrame_16b2,fpwave,nRead);
-                    
-					for( x=0, y=0; y<PCM_FRAME_SIZE; y++,x+=2 )
-                        {
-						//speech[y] = (short)pcmFrame_16b2[x+0];
-						speech[y] = (short)((int)((int)pcmFrame_16b2[x+0] + (int)pcmFrame_16b2[x+1])) >> 1;
-                        }
-                    }
-	
-	// 如果读到的数据不是一个完整的PCM帧, 就返回0
-	return nRead;
-}
-
-// WAVE音频采样频率是8khz 
-// 音频样本单元数 = 8000*0.02 = 160 (由采样频率决定)
-// 声道数 1 : 160
-//        2 : 160*2 = 320
-// bps决定样本(sample)大小
-// bps = 8 --> 8位 unsigned char
-//       16 --> 16位 unsigned short
-NSData* EncodePCMToAMR(char* data, int maxLen,int nChannels, int nBitsPerSample)
-{
-    char* oldBuf = data;
-    /* input speech vector */
-	short speech[160];
-	
-	/* counters */
-	int byte_counter, frames = 0, bytes = 0;
-	
-	/* pointer to encoder state structure */
-	void *enstate;
-	
-	/* requested mode */
-	enum Mode req_mode = MR122;
-	int dtx = 0;
-	
-	/* bitstream filetype */
-	unsigned char amrFrame[MAX_AMR_FRAME_SIZE];
-
-    NSMutableData* out = [[[NSMutableData alloc]init] autorelease];
-	/* write magic number to indicate single channel AMR file storage format */
-	//bytes = fwrite(AMR_MAGIC_NUMBER, sizeof(char), strlen(AMR_MAGIC_NUMBER), fpamr);
-    [out appendBytes:AMR_MAGIC_NUMBER length:strlen(AMR_MAGIC_NUMBER)];
-	
-	/* skip to pcm audio data*/
-	//SkipToPCMAudioData(fpwave);
-	
-	enstate = Encoder_Interface_init(dtx);
-	
-	while(1)
-        {
-		// read one pcm frame
-        if ((data-oldBuf+320)>maxLen) {
-            break;
-        }
-		int nRead = ReadPCMFrameData(speech, data, nChannels, nBitsPerSample);
-        data += nRead;
-        
-		
-		frames++;
-		
-		/* call encoder */
-		byte_counter = Encoder_Interface_Encode(enstate, req_mode, speech, amrFrame, 0);
-		
-		bytes += byte_counter;
-		//fwrite(amrFrame, sizeof (unsigned char), byte_counter, fpamr );
-        [out appendBytes:amrFrame length:byte_counter];
-        }
-	
-	Encoder_Interface_exit(enstate);
-	
-#ifdef DEBUG
-    NSArray *paths               = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-    NSString *documentPath       = [paths objectAtIndex:0];
-    NSString *wavFile        = [documentPath stringByAppendingPathComponent:[NSString stringWithFormat:@"88.amr"]];
-    [out writeToFile:wavFile atomically:YES];
-#endif
-    
-	return out;
-}
-
-//http://developer.apple.com/library/mac/#documentation/MusicAudio/Reference/CAFSpec/CAF_spec/CAF_spec.html#//apple_ref/doc/uid/TP40001862-CH210-SW1
-
-//struct CAFFileHeader {
-//    UInt32  mFileType;
-//    UInt16  mFileVersion;
-//    UInt16  mFileFlags;
-//};
-//
-//struct CAFChunkHeader {
-//    UInt32  mChunkType;
-//    SInt64  mChunkSize;
-//};
-
-int SkipCaffHead(char* buf){
-    
-    if (!buf) {
-        return 0;
-    }
-    char* oldBuf = buf;
-    u32 mFileType = readUint32(buf);
-    if (0x63616666!=mFileType) {
-        return 0;
-    }
-    buf+=4;
-    
-    u16 mFileVersion = readUInt16(buf);
-    buf+=2;
-    u16 mFileFlags = readUInt16(buf);
-    buf+=2;
-    
-    //desc free data
-    u32 magics[3] = {0x64657363,0x66726565,0x64617461};
-    for (int i=0; i<3; ++i) {
-        u32 mChunkType = readUint32(buf);buf+=4;
-        if (magics[i]!=mChunkType) {
-            return 0;
-        }
-        
-        u32 mChunkSize = readSint64(buf);buf+=8;
-        if (mChunkSize<=0) {
-            return 0;
-        }
-        if (i==2) {
-            return buf-oldBuf;
-        }
-        buf += mChunkSize;
-        
-    }
-    
-    
-    return 1;
-}
-
-
-//此处将一个录制的pcm直接转换为amr格式
-//调用方式为 EncodeWAVEToAMR(pcmData,1,16);
-NSData* EncodeWAVEToAMR(NSData* data, int nChannels, int nBitsPerSample)
-{
-    NSArray *paths               = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-    NSString *documentPath       = [paths objectAtIndex:0];
-    NSString *wavFile        = [documentPath stringByAppendingPathComponent:[NSString stringWithFormat:@"11.caf"]];
-    NSLog(@"documentPath=%@", documentPath);
-    
-    if (data==nil){
-        //data = [NSData dataWithContentsOfFile:wavFile];
-        return nil;
-    }
-    
-    int nPos  = 0;
-    char* buf = [data bytes];
-    int maxLen = [data length];
-    
-
-    nPos += SkipCaffHead(buf);
-    if (nPos>=maxLen) {
-        return nil;
-    }
-    
-    //这时取出来的是纯pcm数据
-    buf += nPos;
-    
-    return EncodePCMToAMR(buf,maxLen- nPos,nChannels,nBitsPerSample);
 }
 

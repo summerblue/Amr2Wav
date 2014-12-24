@@ -77,4 +77,6 @@ int DecodeAMRFileToWAVEFile(const char* pchAMRFileName, const char* pchWAVEFilen
 NSData* DecodeAMRToWAVE(NSData* data);
 NSData* EncodeWAVEToAMR(NSData* data, int nChannels, int nBitsPerSample);
 
+NSData* EncodePCMToAMR(char* data, int maxLen,int nChannels, int nBitsPerSample);
+
 #endif
